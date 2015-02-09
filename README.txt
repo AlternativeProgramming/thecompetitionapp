@@ -1,6 +1,6 @@
 UTEK PROGRAMMING COMPETITION - 2015
 
-Joe Longpre, Tony Ngo, Priyank Malvania, and Harshita Huria
+Team 016
 
 Coded in Javascript, HTML, and CSS
 
