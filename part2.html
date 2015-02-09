@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>UTEK Programming Competition 2015</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+	
+	<script src='js/chart/Chart.min.js'></script>
+	<!--<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>-->
+	
+  </head>
+
+  <body>
+
+    <!-- Static navbar -->
+    <nav class="navbar navbar-default navbar-static-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="index.html">UTEK Programming Competition</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="index.html">Start</a></li>
+            <li><a href="part1.html">Problem 1</a></li>
+            <li class="active"><a href="part2.html">Problem 2</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+
+    <div class="container">
+
+      <!-- Main component for a primary marketing message or call to action -->
+      <div class="jumbotron">
+		
+		<p>Maximum Profit:</p>
+        <p id="test">max</p>
+		<br>
+		<p>Buy Date 1:</p>
+		<p id="buy1">buy1</p>
+		<br>
+		<p>Sell Date 1:</p>
+		<p id="sell1">sell1</p>
+		<!--
+		<p id="buy2">buy2</p>
+		<p id="sell2">sell2</p>
+		<p id="buy3">buy3</p>
+		<p id="sell3">sell3</p>
+		<p id="buy4">buy4</p>
+		<p id="sell4">sell4</p>
+		<p id="buy5">buy5</p>
+		<p id="sell5">sell5</p>
+		-->
+		<script>
+			var request = new XMLHttpRequest();
+			request.open("GET", "https://www.quandl.com/api/v1/datasets/WIKI/MSFT.json?sort_order=asc&trim_start=2014-01-01&trim_end=2014-12-31&auth_token=bPVZ7KiRsc_d-6qkq2q3", false);
+			request.send(null);
+			var rough_json_data = JSON.parse(request.responseText);
+			var data_2D_array = rough_json_data["data"];
+			
+			
+			var difference = new Array(data_2D_array.length);
+			for (i = 0; i < data_2D_array.length; i++) {
+				difference[i] = new Array(data_2D_array.length);
+				for (j = 0; j < data_2D_array.length; j++) {
+					difference[i][j] = new Array(5);
+				}
+			}
+			for (k = 0; k < 5; k++) {
+				for (i = 0; i < data_2D_array.length; i++) {				// buy date
+					for (j = i+1; j < data_2D_array.length - k; j++) {		// sell date
+						if (k == 0) {
+							difference[i][j][k] = data_2D_array[j][2] - data_2D_array[i][3];
+						}
+						else 
+						{
+							var underMaxer = -10000;
+						
+							for(p = j + 1; p < data_2D_array.length; p++)
+							{
+								for(q = p + 1; q < data_2D_array.length - k + 1; q++)
+								{
+									if(difference[p][q][k - 1] > underMaxer)
+									{
+										underMaxer = difference[p][q][k - 1];
+									}
+								}
+							}
+							
+							difference[i][j][k] = difference[i][j][0] + underMaxer;
+						}
+					}
+				}
+			}
+			
+			var buySellArray = new Array(10);
+			for (i = 0; i < buySellArray.length; i++) {
+				buySellArray[i] = 0;
+			}
+			var depth;
+			var max = -10000;
+			for (k = 0; k < 5; k++) {
+				for (i = 0; i < data_2D_array.length; i++) {				// buy date
+					for (j = i + 1; j < data_2D_array.length - k; j++) {		// sell 
+												
+						if (difference[i][j][k] > max) 
+						{
+							max = difference[i][j][k];
+							depth = k;
+							buySellArray[0] = i;
+							buySellArray[1] = j;
+						}
+					}
+				}
+			}
+			for (k = 0*(depth - 1); k > 0; k--) {
+				for (i = buySellArray[2*(depth-k)] + 1; i < data_2D_array.length; i++) {			// buy date
+					for (j = buySellArray[2*(depth - k) + 1] + 1; j < data_2D_array.length - k; j++) {		// sell 
+						
+						if (difference[i][j][k] > max) 
+						{
+							max = difference[i][j][k];
+							depth = k;
+							buySellArray[depth - 2 * k] = i;
+							buySellArray[depth - 2 * k + 1] = j;
+						}
+					}
+				}
+			}
+			
+			document.getElementById("test").innerHTML = max;
+			document.getElementById("buy1").innerHTML = data_2D_array[buySellArray[0]][0];
+			document.getElementById("sell1").innerHTML = data_2D_array[buySellArray[1]][0]
+			document.getElementById("buy2").innerHTML = data_2D_array[buySellArray[2]][0]
+			document.getElementById("sell2").innerHTML = data_2D_array[buySellArray[3]][0]
+			document.getElementById("buy3").innerHTML = data_2D_array[buySellArray[4]][0]
+			document.getElementById("sell3").innerHTML = data_2D_array[buySellArray[5]][0]
+			document.getElementById("buy4").innerHTML = data_2D_array[buySellArray[6]][0]
+			document.getElementById("sell4").innerHTML = data_2D_array[buySellArray[7]][0]
+			document.getElementById("buy5").innerHTML = data_2D_array[buySellArray[8]][0]
+			document.getElementById("sell5").innerHTML = data_2D_array[buySellArray[9]][0]
+			
+		</script>
+      </div>
+
+    </div> <!-- /container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+
+  </body>
+</html>
